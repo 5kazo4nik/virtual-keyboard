@@ -3,8 +3,8 @@ const path = require('path');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CssMinimizerWebpackPlugin = require('css-minimizer-webpack-plugin')
-const TerserWebpackPlugin = require('terser-webpack-plugin')
+const CssMinimizerWebpackPlugin = require('css-minimizer-webpack-plugin');
+const TerserWebpackPlugin = require('terser-webpack-plugin');
 
 module.exports = (env, options) => {
   const isProduction = options.mode === 'production';
@@ -15,11 +15,9 @@ module.exports = (env, options) => {
         chunks: 'all',
       },
     };
-    if (isProduction) {                                      // Может не работать
-      configObj.minimizer = [
-        new CssMinimizerWebpackPlugin(),
-        new TerserWebpackPlugin()
-      ]
+    if (isProduction) {
+      // Может не работать
+      configObj.minimizer = [new CssMinimizerWebpackPlugin(), new TerserWebpackPlugin()];
     }
     return configObj;
   };
@@ -35,7 +33,9 @@ module.exports = (env, options) => {
     optimization: optimization(),
     devServer: {
       historyApiFallback: true,
-      contentBase: path.resolve(__dirname, 'app'),
+      static: {
+        directory: path.resolve(__dirname, 'source'),
+      },
       open: true,
       compress: true,
       hot: true,
@@ -69,7 +69,7 @@ module.exports = (env, options) => {
             {
               loader: MiniCssExtractPlugin.loader,
               options: {
-                hmr: !isProduction,                                           // Может не работать
+                hmr: !isProduction, // Может не работать
                 publicPath: (resourcePath, context) => {
                   return path.relative(path.dirname(resourcePath), context) + '/';
                 },
@@ -84,10 +84,10 @@ module.exports = (env, options) => {
     plugins: [
       new CleanWebpackPlugin(),
       new MiniCssExtractPlugin({
-        filename: `./css/${filename('css')}`,
+        filename: `./source/css/${filename('css')}`,
       }),
       new HtmlWebpackPlugin({
-        template: './pages/index.html',
+        template: './source/index.html',
         // filename: 'index.html',
         filename: filename('html'),
         minify: {
