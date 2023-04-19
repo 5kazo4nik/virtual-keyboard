@@ -1,4 +1,3 @@
-const webpack = require('webpack');
 const path = require('path');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -16,7 +15,6 @@ module.exports = (env, options) => {
       },
     };
     if (isProduction) {
-      // Может не работать
       configObj.minimizer = [new CssMinimizerWebpackPlugin(), new TerserWebpackPlugin()];
     }
     return configObj;
@@ -69,10 +67,8 @@ module.exports = (env, options) => {
             {
               loader: MiniCssExtractPlugin.loader,
               options: {
-                hmr: !isProduction, // Может не работать
-                publicPath: (resourcePath, context) => {
-                  return path.relative(path.dirname(resourcePath), context) + '/';
-                },
+                hmr: !isProduction,
+                publicPath: (resourcePath, context) => `${path.relative(path.dirname(resourcePath), context)}/`,
               },
             },
             'css-loader',
@@ -88,10 +84,9 @@ module.exports = (env, options) => {
       }),
       new HtmlWebpackPlugin({
         template: './source/index.html',
-        // filename: 'index.html',
-        filename: filename('html'),
+        filename: 'index.html',
         minify: {
-          collapseWhitespace: isProduction ? true : false,
+          collapseWhitespace: isProduction,
         },
       }),
     ],
