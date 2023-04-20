@@ -43,7 +43,6 @@ module.exports = (env, options) => {
     output: {
       path: path.resolve(__dirname, 'app'),
       filename: `./scripts/${filename('js')}`,
-      publicPath: '',
     },
     module: {
       rules: [
@@ -63,17 +62,7 @@ module.exports = (env, options) => {
         },
         {
           test: /\.s[ac]ss$/i,
-          use: [
-            {
-              loader: MiniCssExtractPlugin.loader,
-              options: {
-                hmr: !isProduction,
-                publicPath: (resourcePath, context) => `${path.relative(path.dirname(resourcePath), context)}/`,
-              },
-            },
-            'css-loader',
-            'sass-loader',
-          ],
+          use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'],
         },
       ],
     },
