@@ -73,6 +73,9 @@ body {
 
 .btn_caps {
   flex-basis: 130px;
+  &_active {
+    background-color: #eb4f4f;
+  }
 }
 
 .btn_enter {

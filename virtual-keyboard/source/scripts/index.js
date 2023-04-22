@@ -18,6 +18,10 @@ const eng = {
 
 let alph = localStorage.getItem('alph') ? localStorage.getItem('alph') : 'eng';
 let textValue = '';
+let ctrl = false;
+let alt = false;
+let shift = false;
+let caps = false;
 
 class Keyboard {
   constructor() {
@@ -100,6 +104,7 @@ class Keyboard {
           btn.classList.add('btn_tab');
         } else if (el[0] === 'Caps lock') {
           btn.classList.add('btn_caps');
+          if (caps) btn.classList.add('btn_caps_active');
         } else if (el[0] === 'Ctrl') {
           if (this.alph[line].indexOf(el) > 0) {
             btn.classList.add('btn_rctrl');
@@ -206,8 +211,13 @@ class Keyboard {
       btn = e.target.closest('.btn');
       inner = btn.querySelector('.btn__inner');
       btn.classList.add('btn_active');
-      if (!btn.className.match(/(caps|space|shift|enter|win|del|ctrl|tab|alt)/) && !inner.className.match(/inner_./)) {
-        this.textArea.value += inner.textContent.toLowerCase();
+      this.textArea.value += Keyboard.setTextAreaValue(this.textArea, btn, inner);
+
+      Keyboard.setSpecBtn(btn);
+
+      if (btn.classList.contains('btn_caps')) {
+        caps = !caps;
+        btn.classList.toggle('btn_caps_active');
       }
     }
   }
@@ -215,10 +225,14 @@ class Keyboard {
   static clickUp(e) {
     let btn;
     // let inner;
-    if (e.target.closest('.btn_active')) {
+
+    if (e.target.closest('.btn')) {
       btn = e.target.closest('.btn');
       // inner = btn.querySelector('.btn__inner');
       btn.classList.remove('btn_active');
+
+      Keyboard.setShortcats(this);
+      Keyboard.setSpecBtn(btn);
     }
   }
 
@@ -231,15 +245,33 @@ class Keyboard {
   }
 
   static pressDown(e) {
+    this.textArea.focus();
     const btn = Keyboard.findBtn(e);
 
     if (btn) {
+      Keyboard.setSpecBtn(btn, e.repeat);
       btn.classList.add('btn_active');
+
+      const inner = btn.querySelector('.btn__inner');
+
+      if (btn.dataset.value === 'Caps lock') {
+        caps = e.repeat ? caps : !caps;
+        if (!e.repeat) btn.classList.toggle('btn_caps_active');
+      }
+
+      if (shift) {
+        this.textArea.value += Keyboard.setTextAreaValue(this.textArea, btn, inner);
+        if (inner.textContent.match(/^.$/)) e.preventDefault();
+      }
     }
   }
 
   static pressUp(e) {
     const btn = Keyboard.findBtn(e);
+
+    const shortcats = Keyboard.setShortcats.bind(this);
+    shortcats(this);
+    Keyboard.setSpecBtn(btn);
 
     if (btn) {
       btn.classList.remove('btn_active');
@@ -287,6 +319,52 @@ class Keyboard {
       btn = btn.closest('.btn');
     }
     return btn;
+  }
+
+  static setSpecBtn(btn, repeat = false) {
+    if (!repeat && btn) {
+      if (btn.dataset.value === 'Shift') {
+        shift = !shift;
+      }
+      if (btn.dataset.value === 'Alt') {
+        alt = !alt;
+      }
+      if (btn.dataset.value === 'Ctrl') {
+        ctrl = !ctrl;
+      }
+    }
+  }
+
+  static setTextAreaValue(textArea, btn, inner) {
+    let value = '';
+    if (inner.textContent.match(/^[^A-Za-zА-Яа-яёЁ]$/)) {
+      if (shift && !alt) {
+        value += btn.textContent[0];
+      } else if (shift && alt) {
+        value = '';
+      } else {
+        value += inner.textContent;
+      }
+    } else if (!btn.className.match(/(caps|space|shift|enter|win|del|ctrl|tab|Alt)/) && !inner.className.match(/inner_./)) {
+      if (shift && !alt && !caps) {
+        value += inner.textContent;
+      } else if (!shift && caps) {
+        value += inner.textContent;
+      } else if (shift && !alt && caps) {
+        value += inner.textContent.toLowerCase();
+      } else if (shift && alt) {
+        value += textArea.value;
+      } else {
+        value += inner.textContent.toLowerCase();
+      }
+    }
+    return value;
+  }
+
+  static setShortcats(thisClass) {
+    if (shift && alt) {
+      Keyboard.switchLang.call(thisClass);
+    }
   }
 }
 
