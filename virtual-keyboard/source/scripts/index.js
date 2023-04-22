@@ -1,22 +1,23 @@
 import '../css/styles.scss';
 
 const rus = {
-  1: [['ё'], ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'], ['6', ':'], ['7', '?'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], ['backspace']],
-  2: [['tab'], ['й'], ['ц'], ['у'], ['к'], ['е'], ['н'], ['г'], ['ш'], ['щ'], ['з'], ['х'], ['ъ'], ['\\', '|'], ['del']],
-  3: [['caps lock'], ['ф'], ['ы'], ['в'], ['а'], ['п'], ['р'], ['о'], ['л'], ['д'], ['ж'], ['э'], ['enter']],
-  4: [['shift'], ['\\', '|'], ['я'], ['ч'], ['с'], ['м'], ['и'], ['т'], ['ь'], ['б'], ['ю'], ['.', ','], ['inner_up'], ['shift']],
-  5: [['ctrl'], ['win'], ['alt'], ['wspace'], ['alt'], ['ctrl'], ['inner_left'], ['inner_down'], ['inner_right']],
+  1: [['ё'], ['1', '!'], ['2', '"'], ['3', '№'], ['4', ';'], ['5', '%'], ['6', ':'], ['7', '?'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], ['Backspace']],
+  2: [['Tab'], ['й'], ['ц'], ['у'], ['к'], ['е'], ['н'], ['г'], ['ш'], ['щ'], ['з'], ['х'], ['ъ'], ['\\', '|'], ['Del']],
+  3: [['Caps lock'], ['ф'], ['ы'], ['в'], ['а'], ['п'], ['р'], ['о'], ['л'], ['д'], ['ж'], ['э'], ['Enter']],
+  4: [['Shift'], ['\\', '|'], ['я'], ['ч'], ['с'], ['м'], ['и'], ['т'], ['ь'], ['б'], ['ю'], ['.', ','], ['inner_up'], ['Shift']],
+  5: [['Ctrl'], ['Win'], ['Alt'], ['space'], ['Alt'], ['Ctrl'], ['inner_left'], ['inner_down'], ['inner_right']],
 };
 
 const eng = {
-  1: [['`', '~'], ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'], ['6', '^'], ['7', '&'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], ['backspace']],
-  2: [['tab'], ['q'], ['w'], ['e'], ['r'], ['t'], ['y'], ['u'], ['i'], ['o'], ['p'], ['[', '{'], [']', '}'], ['\\', '|'], ['del']],
-  3: [['caps lock'], ['a'], ['s'], ['d'], ['f'], ['g'], ['h'], ['j'], ['k'], ['l'], [';', ':'], ["'", ['"']], ['enter']],
-  4: [['shift'], ['\\', '|'], ['z'], ['x'], ['c'], ['v'], ['b'], ['n'], ['m'], [',', '<'], ['.', '>'], ['/', '?'], ['inner_up'], ['shift']],
-  5: [['ctrl'], ['win'], ['alt'], ['wspace'], ['alt'], ['ctrl'], ['inner_left'], ['inner_down'], ['inner_right']],
+  1: [['`', '~'], ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'], ['6', '^'], ['7', '&'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], ['Backspace']],
+  2: [['Tab'], ['q'], ['w'], ['e'], ['r'], ['t'], ['y'], ['u'], ['i'], ['o'], ['p'], ['[', '{'], [']', '}'], ['\\', '|'], ['Del']],
+  3: [['Caps lock'], ['a'], ['s'], ['d'], ['f'], ['g'], ['h'], ['j'], ['k'], ['l'], [';', ':'], ["'", '"'], ['Enter']],
+  4: [['Shift'], ['\\', '|'], ['z'], ['x'], ['c'], ['v'], ['b'], ['n'], ['m'], [',', '<'], ['.', '>'], ['/', '?'], ['inner_up'], ['Shift']],
+  5: [['Ctrl'], ['Win'], ['Alt'], ['space'], ['Alt'], ['Ctrl'], ['inner_left'], ['inner_down'], ['inner_right']],
 };
 
-const alph = localStorage.getItem('alph') ? localStorage.getItem('alph') : 'eng';
+let alph = localStorage.getItem('alph') ? localStorage.getItem('alph') : 'eng';
+let textValue = '';
 
 class Keyboard {
   constructor() {
@@ -43,6 +44,8 @@ class Keyboard {
   build() {
     this.createElements();
     this.insertElements();
+    this.bindEvents();
+    this.textArea.focus();
   }
 
   createButtons() {
@@ -54,46 +57,77 @@ class Keyboard {
       this.alph[line].forEach((el) => {
         const inner = Keyboard.createNode('div', 'btn__inner');
         const btn = Keyboard.createNode('div', 'btn');
+
+        // Вставляет текст в зависимости от того какая это будет кнопка
+        // и определяет dataset для " и \
         if (el[1]) {
           Keyboard.insertNode(btn, el[1]);
+          if (el[0] === '\\' && this.alph[line].indexOf(el) === 1) {
+            btn.dataset.value = 'lBackSlash';
+          } else if (el[0] === '\\') {
+            btn.dataset.value = 'rBackSlash';
+          } else {
+            [btn.dataset.value] = el;
+          }
+          inner.dataset.value = el[1] === '"' ? 'dquote' : el[1];
         }
-        if (el[0].length && !el[0].match(/(inner|wspace)/)) {
+        if (el[0].length && !el[0].match(/(inner|^space$)/)) {
           if (el[0].length > 1) {
-            Keyboard.insertNode(inner, el[0].slice(0, 1).toUpperCase() + el[0].slice(1));
+            Keyboard.insertNode(inner, el[0]);
           } else {
             Keyboard.insertNode(inner, el[0].toUpperCase());
           }
         }
 
-        if ((el[0].length > 1 || el === this.alph[1][0]) && el[0] !== 'wspace') {
+        // Устанавливает dataset для поиска элементов при нажатии клавиши
+        if (el[0].match(/[a-zA-ZА-Яа-я]/) && el[0].length <= 1) {
+          [btn.dataset.value] = el;
+          inner.dataset.value = el[0].toUpperCase();
+        } else if (el[0].match(/[a-zA-ZА-Яа-я]/)) {
+          [btn.dataset.value] = el;
+        }
+
+        // Добавляет классы для стрелочек и боковых элеметов
+        if ((el[0].length > 1 || el === this.alph[1][0]) && el[0] !== 'space') {
           btn.classList.add('btn_bordered');
         }
         if (el[0].match(/inner/)) {
           inner.classList.add(`btn__${el[0]}`);
         }
 
-        if (el[0] === 'tab') {
+        // Добавляет классы для специальных кнопок
+        if (el[0] === 'Tab') {
           btn.classList.add('btn_tab');
-        } else if (el[0] === 'caps lock') {
+        } else if (el[0] === 'Caps lock') {
           btn.classList.add('btn_caps');
-        } else if (el[0] === 'ctrl') {
-          btn.classList.add('btn_ctrl');
-        } else if (el[0] === 'win') {
+        } else if (el[0] === 'Ctrl') {
+          if (this.alph[line].indexOf(el) > 0) {
+            btn.classList.add('btn_rctrl');
+          } else {
+            btn.classList.add('btn_lctrl');
+          }
+        } else if (el[0] === 'Win') {
           btn.classList.add('btn_win');
-        } else if (el[0] === 'alt') {
-          btn.classList.add('btn_alt');
-        } else if (el[0] === 'shift') {
+        } else if (el[0] === 'Alt') {
+          if (this.alph[line].indexOf(el) > 2) {
+            btn.classList.add('btn_rAlt');
+          } else {
+            btn.classList.add('btn_lAlt');
+          }
+        } else if (el[0] === 'Shift') {
           if (this.alph[line].indexOf(el) > 0) {
             btn.classList.add('btn_rshift');
           } else {
             btn.classList.add('btn_lshift');
           }
-        } else if (el[0] === 'wspace') {
+        } else if (el[0] === 'space') {
           btn.classList.add('btn_space');
-        } else if (el[0] === 'backspace') {
+        } else if (el[0] === 'Backspace') {
           btn.classList.add('btn_backspace');
-        } else if (el[0] === 'enter') {
+        } else if (el[0] === 'Enter') {
           btn.classList.add('btn_enter');
+        } else if (el[0] === 'Del') {
+          btn.classList.add('btn_del');
         }
 
         Keyboard.insertNode(btn, inner);
@@ -108,7 +142,7 @@ class Keyboard {
     this.buttons = this.createButtons();
     this.main = Keyboard.createNode('main', 'wrapper');
     this.textArea = Keyboard.createNode('textarea', 'wrapper__input');
-    this.textArea.setAttribute('autofocus', 'true');
+    this.textArea.value = textValue;
     this.keyboard = Keyboard.createNode('div', 'keyboard');
     this.footer = Keyboard.createNode('footer', 'footer');
     this.footerText = Keyboard.createNode('p', 'footer__text');
@@ -130,6 +164,129 @@ class Keyboard {
     Keyboard.insertNode(this.main, this.keyboard);
     Keyboard.insertNode(document.body, this.main);
     Keyboard.insertNode(document.body, this.footer);
+  }
+
+  bindEvents() {
+    const switchLang = Keyboard.switchLang.bind(this);
+    const clickDown = Keyboard.clickDown.bind(this);
+    const clickUp = Keyboard.clickUp.bind(this);
+    const mouseOut = Keyboard.mouseOut.bind(this);
+    const pressDown = Keyboard.pressDown.bind(this);
+    const pressUp = Keyboard.pressUp.bind(this);
+
+    this.footerBtn.addEventListener('click', switchLang);
+
+    this.main.addEventListener('mousedown', clickDown);
+    this.main.addEventListener('mouseup', clickUp);
+    this.main.addEventListener('mouseout', mouseOut);
+
+    this.main.addEventListener('keydown', pressDown);
+    this.main.addEventListener('keyup', pressUp);
+
+    this.textArea.addEventListener('focusout', (e) => {
+      e.preventDefault();
+      e.target.focus();
+    });
+  }
+
+  /// ///////////////////////////////////////////////
+
+  static switchLang() {
+    document.body.innerHTML = '';
+    alph = alph === 'eng' ? 'рус' : 'eng';
+    textValue = this.textArea.value;
+    const switchedKeyboard = new Keyboard();
+    switchedKeyboard.build();
+  }
+
+  static clickDown(e) {
+    let btn;
+    let inner;
+    if (e.target.closest('.btn')) {
+      btn = e.target.closest('.btn');
+      inner = btn.querySelector('.btn__inner');
+      btn.classList.add('btn_active');
+      if (!btn.className.match(/(caps|space|shift|enter|win|del|ctrl|tab|alt)/) && !inner.className.match(/inner_./)) {
+        this.textArea.value += inner.textContent.toLowerCase();
+      }
+    }
+  }
+
+  static clickUp(e) {
+    let btn;
+    // let inner;
+    if (e.target.closest('.btn_active')) {
+      btn = e.target.closest('.btn');
+      // inner = btn.querySelector('.btn__inner');
+      btn.classList.remove('btn_active');
+    }
+  }
+
+  static mouseOut(e) {
+    let btn;
+    if (e.target.classList.contains('btn_active') && !e.relatedTarget.classList.contains('btn__inner')) {
+      btn = e.target.closest('.btn');
+      btn.classList.remove('btn_active');
+    }
+  }
+
+  static pressDown(e) {
+    const btn = Keyboard.findBtn(e);
+
+    if (btn) {
+      btn.classList.add('btn_active');
+    }
+  }
+
+  static pressUp(e) {
+    const btn = Keyboard.findBtn(e);
+
+    if (btn) {
+      btn.classList.remove('btn_active');
+    }
+  }
+
+  static findBtn(e) {
+    let btn;
+
+    if (e.code.includes('Arrow')) {
+      btn = document.querySelector(`[data-value="inner_${e.code.slice(5).toLowerCase()}"]`);
+    } else if (e.code === 'ShiftLeft') {
+      btn = document.querySelector('.btn_lshift');
+    } else if (e.code === 'ShiftRight') {
+      btn = document.querySelector('.btn_rshift');
+    } else if (e.code === 'Space') {
+      btn = document.querySelector('.btn_space');
+    } else if (e.code === 'AltLeft') {
+      btn = document.querySelector('.btn_lAlt');
+    } else if (e.code === 'AltRight') {
+      btn = document.querySelector('.btn_rAlt');
+    } else if (e.code === 'ControlLeft') {
+      btn = document.querySelector('.btn_lctrl');
+    } else if (e.code === 'ControlRight') {
+      btn = document.querySelector('.btn_rctrl');
+    } else if (e.code === 'CapsLock') {
+      btn = document.querySelector('.btn_caps');
+    } else if (e.code === 'Delete') {
+      btn = document.querySelector('.btn_del');
+    } else if (e.key === 'Meta') {
+      btn = document.querySelector('.btn_win');
+    } else if (e.key === 'Tab') {
+      btn = document.querySelector('.btn_tab');
+    } else if (e.key === 'Backspace') {
+      btn = document.querySelector('.btn_backspace');
+    } else if (e.key === '"') {
+      btn = document.querySelector('[data-value="dquote"]');
+    } else if (e.key.match(/^.{1}$/)) {
+      btn = document.querySelector(`[data-value="${e.key}"]`);
+    } else {
+      btn = document.querySelector(`[data-value="${e.key}"]`);
+    }
+
+    if (btn) {
+      btn = btn.closest('.btn');
+    }
+    return btn;
   }
 }
 
