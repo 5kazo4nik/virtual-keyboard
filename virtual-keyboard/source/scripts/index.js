@@ -1,6 +1,6 @@
 import '../css/styles.scss';
 
-const rus = {
+const ru = {
   1: [['ё'], ['1', '!'], ['2', '"'], ['3', '№'], ['4', ';'], ['5', '%'], ['6', ':'], ['7', '?'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], ['Backspace']],
   2: [['Tab'], ['й'], ['ц'], ['у'], ['к'], ['е'], ['н'], ['г'], ['ш'], ['щ'], ['з'], ['х'], ['ъ'], ['\\', '|'], ['Del']],
   3: [['Caps lock'], ['ф'], ['ы'], ['в'], ['а'], ['п'], ['р'], ['о'], ['л'], ['д'], ['ж'], ['э'], ['Enter']],
@@ -8,7 +8,7 @@ const rus = {
   5: [['Ctrl'], ['Win'], ['Alt'], ['space'], ['Alt'], ['Ctrl'], ['inner_left'], ['inner_down'], ['inner_right']],
 };
 
-const eng = {
+const en = {
   1: [['`', '~'], ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'], ['6', '^'], ['7', '&'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], ['Backspace']],
   2: [['Tab'], ['q'], ['w'], ['e'], ['r'], ['t'], ['y'], ['u'], ['i'], ['o'], ['p'], ['[', '{'], [']', '}'], ['\\', '|'], ['Del']],
   3: [['Caps lock'], ['a'], ['s'], ['d'], ['f'], ['g'], ['h'], ['j'], ['k'], ['l'], [';', ':'], ["'", '"'], ['Enter']],
@@ -16,16 +16,18 @@ const eng = {
   5: [['Ctrl'], ['Win'], ['Alt'], ['space'], ['Alt'], ['Ctrl'], ['inner_left'], ['inner_down'], ['inner_right']],
 };
 
-let alph = localStorage.getItem('alph') ? localStorage.getItem('alph') : 'eng';
+let alph = localStorage.getItem('alph') ? localStorage.getItem('alph') : navigator.language.slice(0, 2).toLowerCase();
 let textValue = '';
 let ctrl = false;
 let alt = false;
 let shift = false;
 let caps = false;
 
+window.addEventListener('beforeunload', () => localStorage.setItem('alph', alph));
+
 class Keyboard {
   constructor() {
-    this.alph = alph === 'eng' ? eng : rus;
+    this.alph = alph === 'ru' ? ru : en;
   }
 
   // Создает узел с указанными классами
@@ -73,7 +75,16 @@ class Keyboard {
           } else {
             [btn.dataset.value] = el;
           }
-          inner.dataset.value = el[1] === '"' ? 'dquote' : el[1];
+
+          if (el[1] === '|' && this.alph[line].indexOf(el) === 1) {
+            inner.dataset.value = 'l|';
+          } else if (el[1] === '|') {
+            inner.dataset.value = 'r|';
+          } else if (el[1] === '"') {
+            inner.dataset.value = 'dquote';
+          } else {
+            inner.dataset.value = el[1] === '"' ? 'dquote' : el[1];
+          }
         }
         if (el[0].length && !el[0].match(/(inner|^space$)/)) {
           if (el[0].length > 1) {
@@ -156,7 +167,7 @@ class Keyboard {
 
   insertElements() {
     // prettier-ignore
-    this.text = alph === 'eng'
+    this.text = alph === 'en'
       ? 'The keyboard was created for windows. To change the language, press the button below or the key combination left shift + left alt'
       : 'Клавиатура была создана для windows. Для смены языка нажмите кнопку снизу или комбинацию клавиш левый shift + левый alt';
 
@@ -198,7 +209,7 @@ class Keyboard {
 
   static switchLang() {
     document.body.innerHTML = '';
-    alph = alph === 'eng' ? 'рус' : 'eng';
+    alph = alph === 'en' ? 'ru' : 'en';
     textValue = this.textArea.value;
     const switchedKeyboard = new Keyboard();
     switchedKeyboard.build();
@@ -211,24 +222,23 @@ class Keyboard {
       btn = e.target.closest('.btn');
       inner = btn.querySelector('.btn__inner');
       btn.classList.add('btn_active');
-      this.textArea.value += Keyboard.setTextAreaValue(this.textArea, btn, inner);
 
-      Keyboard.setSpecBtn(btn);
+      this.setTextAreaValue(btn, inner);
 
       if (btn.classList.contains('btn_caps')) {
         caps = !caps;
         btn.classList.toggle('btn_caps_active');
       }
+
+      Keyboard.setSpecBtn(btn);
     }
   }
 
   static clickUp(e) {
     let btn;
-    // let inner;
 
     if (e.target.closest('.btn')) {
       btn = e.target.closest('.btn');
-      // inner = btn.querySelector('.btn__inner');
       btn.classList.remove('btn_active');
 
       Keyboard.setShortcats(this);
@@ -249,20 +259,22 @@ class Keyboard {
     const btn = Keyboard.findBtn(e);
 
     if (btn) {
-      Keyboard.setSpecBtn(btn, e.repeat);
       btn.classList.add('btn_active');
-
-      const inner = btn.querySelector('.btn__inner');
-
+      Keyboard.setSpecBtn(btn, e.repeat);
       if (btn.dataset.value === 'Caps lock') {
         caps = e.repeat ? caps : !caps;
         if (!e.repeat) btn.classList.toggle('btn_caps_active');
       }
 
-      if (shift) {
-        this.textArea.value += Keyboard.setTextAreaValue(this.textArea, btn, inner);
-        if (inner.textContent.match(/^.$/)) e.preventDefault();
+      const inner = btn.querySelector('.btn__inner');
+
+      if (btn.dataset.value.match(/^.$/) && ctrl) {
+        return;
       }
+
+      this.setTextAreaValue(btn, inner);
+
+      if (btn.dataset.value.match(/(^.$|Enter|space|Del)/)) e.preventDefault();
     }
   }
 
@@ -277,6 +289,8 @@ class Keyboard {
       btn.classList.remove('btn_active');
     }
   }
+
+  // //////////////////////////////////////////////////////////////////
 
   static findBtn(e) {
     let btn;
@@ -309,6 +323,10 @@ class Keyboard {
       btn = document.querySelector('.btn_backspace');
     } else if (e.key === '"') {
       btn = document.querySelector('[data-value="dquote"]');
+    } else if (e.code === 'IntlBackslash') {
+      btn = document.querySelector('[data-value="lBackSlash"]');
+    } else if (e.code === 'Backslash') {
+      btn = document.querySelector('[data-value="rBackSlash"]');
     } else if (e.key.match(/^.{1}$/)) {
       btn = document.querySelector(`[data-value="${e.key}"]`);
     } else {
@@ -324,18 +342,18 @@ class Keyboard {
   static setSpecBtn(btn, repeat = false) {
     if (!repeat && btn) {
       if (btn.dataset.value === 'Shift') {
-        shift = !shift;
+        shift = btn.classList.contains('btn_active') ? !shift : false;
       }
       if (btn.dataset.value === 'Alt') {
-        alt = !alt;
+        alt = btn.classList.contains('btn_active') ? !alt : false;
       }
       if (btn.dataset.value === 'Ctrl') {
-        ctrl = !ctrl;
+        ctrl = btn.classList.contains('btn_active') ? !ctrl : false;
       }
     }
   }
 
-  static setTextAreaValue(textArea, btn, inner) {
+  static findBtnValue(textArea, btn, inner) {
     let value = '';
     if (inner.textContent.match(/^[^A-Za-zА-Яа-яёЁ]$/)) {
       if (shift && !alt) {
@@ -357,8 +375,87 @@ class Keyboard {
       } else {
         value += inner.textContent.toLowerCase();
       }
+    } else if (btn.classList.contains('btn_tab') && !shift) {
+      value += '    ';
+    } else if (btn.classList.contains('btn_space')) {
+      value += ' ';
+    } else if (btn.classList.contains('btn_enter')) {
+      value += '\n';
     }
     return value;
+  }
+
+  setTextAreaValue(btn, inner) {
+    const posStart = this.textArea.selectionStart;
+    const posEnd = this.textArea.selectionEnd;
+    const { value } = this.textArea;
+
+    let isBS = false;
+    let isDel = false;
+    let deleted;
+    const selected = posEnd - posStart;
+
+    let btnValue;
+    let newValue;
+
+    let nonAlphNum;
+    let posMatch;
+    const prevChar = value[posStart - 1];
+    const nextChar = value[posEnd];
+
+    if (btn.classList.contains('btn_backspace')) {
+      if (posStart !== 0 || posEnd !== 0) {
+        if (selected) {
+          deleted = value.slice(posStart, posEnd);
+          newValue = value.slice(0, posStart) + value.slice(posEnd);
+        } else if (ctrl) {
+          nonAlphNum = prevChar.match(/[a-zA-ZА-Яа-я0-9]+/) ? value.slice(0, posStart).match(/[a-zA-ZА-Яа-я0-9]+$/) : value.slice(0, posStart).match(/[^a-zA-ZА-Яа-я0-9]+$/);
+          posMatch = nonAlphNum ? 0 + nonAlphNum.index : 0;
+          deleted = value.slice(posMatch, posStart);
+          newValue = value.slice(0, posMatch) + value.slice(posEnd);
+        } else {
+          deleted = value.slice(posStart - 1, posEnd);
+          newValue = value.slice(0, posStart - 1) + value.slice(posEnd);
+        }
+        isBS = true;
+      }
+    } else if (btn.classList.contains('btn_del')) {
+      if (selected) {
+        deleted = value.slice(posStart, posEnd);
+        newValue = value.slice(0, posStart) + value.slice(posEnd);
+      } else if (ctrl && nextChar) {
+        nonAlphNum = nextChar.match(/[a-zA-ZА-Яа-я0-9]+/) ? value.slice(posEnd, value.length).match(/[^a-zA-ZА-Яа-я0-9]+?/) : value.slice(posEnd, value.length).match(/[a-zA-ZА-Яа-я0-9]+?/);
+        posMatch = nonAlphNum ? posEnd + nonAlphNum.index : value.length;
+        deleted = value.slice(posEnd, posMatch);
+        newValue = value.slice(0, posEnd) + value.slice(posMatch, value.length);
+      } else {
+        deleted = value.slice(posStart, posEnd + 1);
+        newValue = value.slice(0, posStart) + value.slice(posEnd + 1);
+      }
+      isDel = true;
+    } else {
+      btnValue = Keyboard.findBtnValue(this.textArea, btn, inner);
+      newValue = value.slice(0, posStart) + btnValue + value.slice(posEnd);
+    }
+
+    if (btnValue) {
+      this.textArea.value = newValue;
+      this.textArea.selectionStart = posStart + btnValue.length;
+      this.textArea.selectionEnd = posStart + btnValue.length;
+    } else if (isBS) {
+      this.textArea.value = newValue;
+      if (!selected) {
+        this.textArea.selectionStart = posStart - deleted.length;
+        this.textArea.selectionEnd = posEnd - deleted.length;
+      } else {
+        this.textArea.selectionStart = posStart;
+        this.textArea.selectionEnd = posStart;
+      }
+    } else if (isDel) {
+      this.textArea.value = newValue;
+      this.textArea.selectionStart = posStart;
+      this.textArea.selectionEnd = posStart;
+    }
   }
 
   static setShortcats(thisClass) {
