@@ -274,7 +274,7 @@ class Keyboard {
 
       this.setTextAreaValue(btn, inner);
 
-      if (btn.dataset.value.match(/(^.$|Enter|space|Del)/)) e.preventDefault();
+      if (btn.dataset.value.match(/(^.$|Enter|space|Del|inner)/)) e.preventDefault();
     }
   }
 
@@ -398,41 +398,23 @@ class Keyboard {
     let btnValue;
     let newValue;
 
-    let nonAlphNum;
-    let posMatch;
     const prevChar = value[posStart - 1];
     const nextChar = value[posEnd];
 
     if (btn.classList.contains('btn_backspace')) {
       if (posStart !== 0 || posEnd !== 0) {
-        if (selected) {
-          deleted = value.slice(posStart, posEnd);
-          newValue = value.slice(0, posStart) + value.slice(posEnd);
-        } else if (ctrl) {
-          nonAlphNum = prevChar.match(/[a-zA-ZА-Яа-я0-9]+/) ? value.slice(0, posStart).match(/[a-zA-ZА-Яа-я0-9]+$/) : value.slice(0, posStart).match(/[^a-zA-ZА-Яа-я0-9]+$/);
-          posMatch = nonAlphNum ? 0 + nonAlphNum.index : 0;
-          deleted = value.slice(posMatch, posStart);
-          newValue = value.slice(0, posMatch) + value.slice(posEnd);
-        } else {
-          deleted = value.slice(posStart - 1, posEnd);
-          newValue = value.slice(0, posStart - 1) + value.slice(posEnd);
-        }
+        newValue = Keyboard.useBackspace(value, posStart, posEnd, selected, prevChar).newValue;
+        deleted = Keyboard.useBackspace(value, posStart, posEnd, selected, prevChar).deleted;
         isBS = true;
       }
     } else if (btn.classList.contains('btn_del')) {
-      if (selected) {
-        deleted = value.slice(posStart, posEnd);
-        newValue = value.slice(0, posStart) + value.slice(posEnd);
-      } else if (ctrl && nextChar) {
-        nonAlphNum = nextChar.match(/[a-zA-ZА-Яа-я0-9]+/) ? value.slice(posEnd, value.length).match(/[^a-zA-ZА-Яа-я0-9]+?/) : value.slice(posEnd, value.length).match(/[a-zA-ZА-Яа-я0-9]+?/);
-        posMatch = nonAlphNum ? posEnd + nonAlphNum.index : value.length;
-        deleted = value.slice(posEnd, posMatch);
-        newValue = value.slice(0, posEnd) + value.slice(posMatch, value.length);
-      } else {
-        deleted = value.slice(posStart, posEnd + 1);
-        newValue = value.slice(0, posStart) + value.slice(posEnd + 1);
-      }
+      newValue = Keyboard.useDel(value, posStart, posEnd, selected, nextChar).newValue;
+      deleted = Keyboard.useDel(value, posStart, posEnd, selected, nextChar).deleted;
       isDel = true;
+    } else if (btn.dataset.value.includes('inner')) {
+      const pos = Keyboard.useArrows(btn, value, posStart, posEnd, selected, prevChar, nextChar);
+      this.textArea.selectionStart = pos.start;
+      this.textArea.selectionEnd = pos.end;
     } else {
       btnValue = Keyboard.findBtnValue(this.textArea, btn, inner);
       newValue = value.slice(0, posStart) + btnValue + value.slice(posEnd);
@@ -456,6 +438,135 @@ class Keyboard {
       this.textArea.selectionStart = posStart;
       this.textArea.selectionEnd = posStart;
     }
+  }
+
+  static useBackspace(value, posStart, posEnd, selected, prevChar) {
+    let newValue;
+    let nonAlphNum;
+    let posMatch;
+    let deleted;
+    if (selected) {
+      deleted = value.slice(posStart, posEnd);
+      newValue = value.slice(0, posStart) + value.slice(posEnd);
+    } else if (ctrl) {
+      nonAlphNum = prevChar.match(/[a-zA-ZА-Яа-я0-9]+/) ? value.slice(0, posStart).match(/[a-zA-ZА-Яа-я0-9]+$/) : value.slice(0, posStart).match(/[^a-zA-ZА-Яа-я0-9]+$/);
+      posMatch = nonAlphNum ? 0 + nonAlphNum.index : 0;
+      deleted = value.slice(posMatch, posStart);
+      newValue = value.slice(0, posMatch) + value.slice(posEnd);
+    } else {
+      deleted = value.slice(posStart - 1, posEnd);
+      newValue = value.slice(0, posStart - 1) + value.slice(posEnd);
+    }
+    return { newValue, deleted };
+  }
+
+  static useDel(value, posStart, posEnd, selected, nextChar) {
+    let newValue;
+    let opposedChar;
+    let posMatch;
+    let deleted;
+    if (selected) {
+      deleted = value.slice(posStart, posEnd);
+      newValue = value.slice(0, posStart) + value.slice(posEnd);
+    } else if (ctrl && nextChar) {
+      opposedChar = nextChar.match(/[a-zA-ZА-Яа-я0-9]+/) ? value.slice(posEnd, value.length).match(/[^a-zA-ZА-Яа-я0-9]+?/) : value.slice(posEnd, value.length).match(/[a-zA-ZА-Яа-я0-9]+?/);
+      posMatch = opposedChar ? posEnd + opposedChar.index : value.length;
+      deleted = value.slice(posEnd, posMatch);
+      newValue = value.slice(0, posEnd) + value.slice(posMatch, value.length);
+    } else {
+      deleted = value.slice(posStart, posEnd + 1);
+      newValue = value.slice(0, posStart) + value.slice(posEnd + 1);
+    }
+    return { newValue, deleted };
+  }
+
+  static useArrows(btn, value, posStart, posEnd, selected, prevChar, nextChar) {
+    let start;
+    let end;
+    let opposedChar;
+    let posMatch;
+    if (btn.dataset.value === 'inner_left') {
+      if (ctrl && posStart > 0) {
+        opposedChar = prevChar.match(/[a-zA-ZА-Яа-я0-9]+/) ? value.slice(0, posStart).match(/[a-zA-ZА-Яа-я0-9]+$/) : value.slice(0, posStart).match(/[^a-zA-ZА-Яа-я0-9]+$/);
+        posMatch = opposedChar ? 0 + opposedChar.index : 0;
+        start = posMatch;
+        if (shift) {
+          end = posEnd;
+        } else {
+          end = posMatch;
+        }
+      } else if (shift && posStart > 0) {
+        start = posStart - 1;
+        end = posEnd;
+      } else if (shift && !posStart) {
+        start = 0;
+        end = posEnd;
+      } else if (selected) {
+        start = posStart;
+        end = posStart;
+      } else if (posStart > 0) {
+        start = posStart - 1;
+        end = posStart - 1;
+      }
+    }
+
+    if (btn.dataset.value === 'inner_right') {
+      if (ctrl && posEnd < value.length) {
+        opposedChar = nextChar.match(/[a-zA-ZА-Яа-я0-9]+/) ? value.slice(posEnd, value.length).match(/[^a-zA-ZА-Яа-я0-9]+?/) : value.slice(posEnd, value.length).match(/[a-zA-ZА-Яа-я0-9]+?/);
+        posMatch = opposedChar ? posEnd + opposedChar.index : value.length;
+        end = posMatch;
+        if (shift) {
+          start = posStart;
+        } else {
+          start = posMatch;
+        }
+      } else if (shift && posStart < value.length) {
+        start = posStart;
+        end = posEnd + 1;
+      } else if (shift && posEnd === value.length) {
+        start = posStart;
+        end = value.length;
+      } else if (selected) {
+        start = posEnd;
+        end = posEnd;
+      } else if (posEnd < value.length) {
+        start = posStart + 1;
+        end = posStart + 1;
+      } else if (posStart === value.length) {
+        start = value.length;
+        end = value.length;
+      }
+    }
+
+    if (btn.dataset.value === 'inner_up') {
+      let prevLineEnd = value.slice(0, posStart).lastIndexOf('\n');
+      prevLineEnd = prevLineEnd < 0 ? 0 : prevLineEnd;
+      const prevLineStart = value.slice(0, prevLineEnd).lastIndexOf('\n') + 1;
+      const column = posStart - (prevLineEnd + 1);
+
+      start = prevLineEnd - prevLineStart < column ? prevLineEnd : prevLineStart + column;
+      if (shift) {
+        end = posEnd;
+      } else {
+        end = start;
+      }
+    }
+
+    if (btn.dataset.value === 'inner_down') {
+      const curLineStart = value.slice(0, posEnd).lastIndexOf('\n') + 1;
+      let nextLineStart = value.indexOf('\n', curLineStart) + 1;
+      nextLineStart = nextLineStart === 0 ? value.length : nextLineStart;
+      const column = value.slice(curLineStart, posEnd).length;
+
+      end = nextLineStart === value.length ? value.length : nextLineStart + column;
+      if (shift) {
+        start = posStart;
+      } else {
+        start = end;
+      }
+    }
+
+    return { start, end };
   }
 
   static setShortcats(thisClass) {
