@@ -54,6 +54,7 @@ class Keyboard {
     this.textArea.focus();
   }
 
+  // Функция для генерации кнопок, их data атрибута, текстового значения и классов
   createButtons() {
     const buttonsLines = [];
 
@@ -154,6 +155,7 @@ class Keyboard {
     return buttonsLines;
   }
 
+  // Функция создающая все элементы клавиатуры
   createElements() {
     this.buttons = this.createButtons();
     this.main = Keyboard.createNode('main', 'wrapper');
@@ -165,6 +167,7 @@ class Keyboard {
     this.footerBtn = Keyboard.createNode('button', 'footer__btn');
   }
 
+  // Функция вставляющая нужный текст или элементы
   insertElements() {
     // prettier-ignore
     this.text = alph === 'en'
@@ -182,6 +185,8 @@ class Keyboard {
     Keyboard.insertNode(document.body, this.footer);
   }
 
+  // Функция привязывает метод класса к контексту этого класса и добавляет на элементы
+  // обрабочкики событий.
   bindEvents() {
     const switchLang = Keyboard.switchLang.bind(this);
     const clickDown = Keyboard.clickDown.bind(this);
@@ -207,6 +212,7 @@ class Keyboard {
 
   /// ///////////////////////////////////////////////
 
+  // Меняет язык путем удаления элемента и его повторной генерации с новым языком
   static switchLang() {
     document.body.innerHTML = '';
     alph = alph === 'en' ? 'ru' : 'en';
@@ -215,6 +221,7 @@ class Keyboard {
     switchedKeyboard.build();
   }
 
+  // Логика при событии mousedown
   static clickDown(e) {
     let btn;
     let inner;
@@ -234,6 +241,7 @@ class Keyboard {
     }
   }
 
+  // Логика при событии mouseUp, на этом событии можно выполнить смену языка
   static clickUp(e) {
     let btn;
 
@@ -246,6 +254,7 @@ class Keyboard {
     }
   }
 
+  // Функция для корректирования заедания анимации.
   static mouseOut(e) {
     let btn;
     if (e.target.classList.contains('btn_active') && !e.relatedTarget.classList.contains('btn__inner')) {
@@ -254,6 +263,7 @@ class Keyboard {
     }
   }
 
+  // Логика при событии pressdown
   static pressDown(e) {
     this.textArea.focus();
     const btn = Keyboard.findBtn(e);
@@ -278,6 +288,7 @@ class Keyboard {
     }
   }
 
+  // Логика при событии pressup, на этом событии можно выполнить смену языка
   static pressUp(e) {
     const btn = Keyboard.findBtn(e);
 
@@ -292,6 +303,7 @@ class Keyboard {
 
   // //////////////////////////////////////////////////////////////////
 
+  // Функция для поиска элемента нажатой кнопки
   static findBtn(e) {
     let btn;
 
@@ -339,6 +351,7 @@ class Keyboard {
     return btn;
   }
 
+  // Функция для изменения значений спец-клавиш.
   static setSpecBtn(btn, repeat = false) {
     if (!repeat && btn) {
       if (btn.dataset.value === 'Shift') {
@@ -353,6 +366,7 @@ class Keyboard {
     }
   }
 
+  // Функция для поиска значения переданной кнопки
   static findBtnValue(textArea, btn, inner) {
     let value = '';
     if (inner.textContent.match(/^[^A-Za-zА-Яа-яёЁ]$/)) {
@@ -385,6 +399,8 @@ class Keyboard {
     return value;
   }
 
+  // Функция изменяющая textarea.value в зависимости от нажатой кнопки или
+  // сочетания клавишь и установка курсора на новое положение.
   setTextAreaValue(btn, inner) {
     const posStart = this.textArea.selectionStart;
     const posEnd = this.textArea.selectionEnd;
@@ -440,6 +456,8 @@ class Keyboard {
     }
   }
 
+  // Определяет новое значение textarea при нажатии backspace, в том числе
+  // при сочетании клавиш
   static useBackspace(value, posStart, posEnd, selected, prevChar) {
     let newValue;
     let nonAlphNum;
@@ -460,6 +478,8 @@ class Keyboard {
     return { newValue, deleted };
   }
 
+  // Определяет новое значение textarea при нажатии del, в том числе
+  // при сочетании клавиш
   static useDel(value, posStart, posEnd, selected, nextChar) {
     let newValue;
     let opposedChar;
@@ -480,6 +500,8 @@ class Keyboard {
     return { newValue, deleted };
   }
 
+  // Определяет новое положение курсора при нажатии на стрелочки в том числе
+  // при сочетании клавиш
   static useArrows(btn, value, posStart, posEnd, selected, prevChar, nextChar) {
     let start;
     let end;
@@ -569,6 +591,7 @@ class Keyboard {
     return { start, end };
   }
 
+  // Вызывает функцию смены языка при сочетании клавиш
   static setShortcats(thisClass) {
     if (shift && alt) {
       Keyboard.switchLang.call(thisClass);
