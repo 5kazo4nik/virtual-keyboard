@@ -1,2 +1,2 @@
 # 5kazo4nik-JSFE2023Q1
-1. Shelter - https://rolling-scopes-school.github.io/5kazo4nik-JSFE2023Q1/shelter/dist/index.html
+1. Virtual-keyboard - https://5kazo4nik.github.io/virtual-keyboard/virtual-keyboard/app/
