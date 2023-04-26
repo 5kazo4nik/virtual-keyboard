@@ -95,10 +95,10 @@ class Keyboard {
         }
 
         // Устанавливает dataset для поиска элементов при нажатии клавиши
-        if (el[0].match(/[a-zA-ZА-Яа-я]/) && el[0].length <= 1) {
+        if (el[0].match(/[a-zA-ZА-Яа-яёЁ]/) && el[0].length <= 1) {
           [btn.dataset.value] = el;
           inner.dataset.value = el[0].toUpperCase();
-        } else if (el[0].match(/[a-zA-ZА-Яа-я]/)) {
+        } else if (el[0].match(/[a-zA-ZА-Яа-яёЁ]/)) {
           [btn.dataset.value] = el;
         }
 
@@ -449,7 +449,7 @@ class Keyboard {
       deleted = value.slice(posStart, posEnd);
       newValue = value.slice(0, posStart) + value.slice(posEnd);
     } else if (ctrl) {
-      nonAlphNum = prevChar.match(/[a-zA-ZА-Яа-я0-9]+/) ? value.slice(0, posStart).match(/[a-zA-ZА-Яа-я0-9]+$/) : value.slice(0, posStart).match(/[^a-zA-ZА-Яа-я0-9]+$/);
+      nonAlphNum = prevChar.match(/[a-zA-ZА-Яа-я0-9ёЁ]+/) ? value.slice(0, posStart).match(/[a-zA-ZА-Яа-я0-9ёЁ]+$/) : value.slice(0, posStart).match(/[^a-zA-ZА-Яа-я0-9ёЁ]+$/);
       posMatch = nonAlphNum ? 0 + nonAlphNum.index : 0;
       deleted = value.slice(posMatch, posStart);
       newValue = value.slice(0, posMatch) + value.slice(posEnd);
@@ -469,7 +469,7 @@ class Keyboard {
       deleted = value.slice(posStart, posEnd);
       newValue = value.slice(0, posStart) + value.slice(posEnd);
     } else if (ctrl && nextChar) {
-      opposedChar = nextChar.match(/[a-zA-ZА-Яа-я0-9]+/) ? value.slice(posEnd, value.length).match(/[^a-zA-ZА-Яа-я0-9]+?/) : value.slice(posEnd, value.length).match(/[a-zA-ZА-Яа-я0-9]+?/);
+      opposedChar = nextChar.match(/[a-zA-ZА-Яа-я0-9ёЁ]+/) ? value.slice(posEnd, value.length).match(/[^a-zA-ZА-Яа-я0-9ёЁ]+?/) : value.slice(posEnd, value.length).match(/[a-zA-ZА-Яа-я0-9ёЁ]+?/);
       posMatch = opposedChar ? posEnd + opposedChar.index : value.length;
       deleted = value.slice(posEnd, posMatch);
       newValue = value.slice(0, posEnd) + value.slice(posMatch, value.length);
@@ -487,7 +487,7 @@ class Keyboard {
     let posMatch;
     if (btn.dataset.value === 'inner_left') {
       if (ctrl && posStart > 0) {
-        opposedChar = prevChar.match(/[a-zA-ZА-Яа-я0-9]+/) ? value.slice(0, posStart).match(/[a-zA-ZА-Яа-я0-9]+$/) : value.slice(0, posStart).match(/[^a-zA-ZА-Яа-я0-9]+$/);
+        opposedChar = prevChar.match(/[a-zA-ZА-Яа-я0-9ёЁ]+/) ? value.slice(0, posStart).match(/[a-zA-ZА-Яа-я0-9ёЁ]+$/) : value.slice(0, posStart).match(/[^a-zA-ZА-Яа-я0-9ёЁ]+$/);
         posMatch = opposedChar ? 0 + opposedChar.index : 0;
         start = posMatch;
         if (shift) {
@@ -512,7 +512,7 @@ class Keyboard {
 
     if (btn.dataset.value === 'inner_right') {
       if (ctrl && posEnd < value.length) {
-        opposedChar = nextChar.match(/[a-zA-ZА-Яа-я0-9]+/) ? value.slice(posEnd, value.length).match(/[^a-zA-ZА-Яа-я0-9]+?/) : value.slice(posEnd, value.length).match(/[a-zA-ZА-Яа-я0-9]+?/);
+        opposedChar = nextChar.match(/[a-zA-ZА-Яа-я0-9ёЁ]+/) ? value.slice(posEnd, value.length).match(/[^a-zA-ZА-Яа-я0-9ёЁ]+?/) : value.slice(posEnd, value.length).match(/[a-zA-ZА-Яа-я0-9ёЁ]+?/);
         posMatch = opposedChar ? posEnd + opposedChar.index : value.length;
         end = posMatch;
         if (shift) {
