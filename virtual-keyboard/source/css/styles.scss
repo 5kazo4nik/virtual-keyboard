@@ -52,6 +52,11 @@ body {
   text-align: left;
   cursor: pointer;
   transition: 0.2s;
+  opacity: 1;
+
+  &:hover {
+    background-color: #15c8f5;
+  }
 
   &_bordered {
     background-color: #293133;
