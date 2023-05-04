@@ -530,9 +530,15 @@ class Keyboard {
       const curLineStart = value.slice(0, posEnd).lastIndexOf('\n') + 1;
       let nextLineStart = value.indexOf('\n', curLineStart) + 1;
       nextLineStart = nextLineStart === 0 ? value.length : nextLineStart;
+
+      let nextLineEnd = value.indexOf('\n', nextLineStart);
+      nextLineEnd = nextLineEnd === -1 ? value.length : nextLineEnd;
+
       const column = value.slice(curLineStart, posEnd).length;
 
       end = nextLineStart === value.length ? value.length : nextLineStart + column;
+      end = end > nextLineEnd ? nextLineEnd : end;
+
       if (shift) {
         start = posStart;
       } else {
