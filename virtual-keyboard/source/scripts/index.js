@@ -1,5 +1,13 @@
 import '../css/styles.scss';
 
+const codes = {
+  1: [['Backquote'], ['Digit1'], ['Digit2'], ['Digit3'], ['Digit4'], ['Digit5'], ['Digit6'], ['Digit7'], ['Digit8'], ['Digit9'], ['Digit0'], ['Minus'], ['Equal'], ['Backspace']],
+  2: [['Tab'], ['KeyQ'], ['KeyW'], ['KeyE'], ['KeyR'], ['KeyT'], ['KeyY'], ['KeyU'], ['KeyI'], ['KeyO'], ['KeyP'], ['BracketLeft'], ['BracketRight'], ['Backslash'], ['Delete']],
+  3: [['CapsLock'], ['KeyA'], ['KeyS'], ['KeyD'], ['KeyF'], ['KeyG'], ['KeyH'], ['KeyJ'], ['KeyK'], ['KeyL'], ['Semicolon'], ['Quote'], ['Enter']],
+  4: [['ShiftLeft'], ['IntlBackslash'], ['KeyZ'], ['KeyX'], ['KeyC'], ['KeyV'], ['KeyB'], ['KeyN'], ['KeyM'], ['Comma'], ['Period'], ['Slash'], ['inner_up'], ['ShiftRight']],
+  5: [['ControlLeft'], ['MetaLeft'], ['AltLeft'], ['Space'], ['AltRight'], ['ControlRight'], ['inner_left'], ['inner_down'], ['inner_right']],
+};
+
 const ru = {
   1: [['ё'], ['1', '!'], ['2', '"'], ['3', '№'], ['4', ';'], ['5', '%'], ['6', ':'], ['7', '?'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], ['Backspace']],
   2: [['Tab'], ['й'], ['ц'], ['у'], ['к'], ['е'], ['н'], ['г'], ['ш'], ['щ'], ['з'], ['х'], ['ъ'], ['\\', '|'], ['Del']],
@@ -61,7 +69,7 @@ class Keyboard {
     Object.keys(this.alph).forEach((line) => {
       const keyboardLine = Keyboard.createNode('div', 'keyboard__line');
 
-      this.alph[line].forEach((el) => {
+      this.alph[line].forEach((el, index) => {
         const inner = Keyboard.createNode('div', 'btn__inner');
         const btn = Keyboard.createNode('div', 'btn');
 
@@ -69,23 +77,6 @@ class Keyboard {
         // и определяет dataset для " и \
         if (el[1]) {
           Keyboard.insertNode(btn, el[1]);
-          if (el[0] === '\\' && this.alph[line].indexOf(el) === 1) {
-            btn.dataset.value = 'lBackSlash';
-          } else if (el[0] === '\\') {
-            btn.dataset.value = 'rBackSlash';
-          } else {
-            [btn.dataset.value] = el;
-          }
-
-          if (el[1] === '|' && this.alph[line].indexOf(el) === 1) {
-            inner.dataset.value = 'l|';
-          } else if (el[1] === '|') {
-            inner.dataset.value = 'r|';
-          } else if (el[1] === '"') {
-            inner.dataset.value = 'dquote';
-          } else {
-            inner.dataset.value = el[1] === '"' ? 'dquote' : el[1];
-          }
         }
         if (el[0].length && !el[0].match(/(inner|^space$)/)) {
           if (el[0].length > 1) {
@@ -96,12 +87,7 @@ class Keyboard {
         }
 
         // Устанавливает dataset для поиска элементов при нажатии клавиши
-        if (el[0].match(/[a-zA-ZА-Яа-яёЁ]/) && el[0].length <= 1) {
-          [btn.dataset.value] = el;
-          inner.dataset.value = el[0].toUpperCase();
-        } else if (el[0].match(/[a-zA-ZА-Яа-яёЁ]/)) {
-          [btn.dataset.value] = el;
-        }
+        [btn.dataset.value] = codes[line][index];
 
         // Добавляет классы для стрелочек и боковых элеметов
         if ((el[0].length > 1 || el === this.alph[1][0]) && el[0] !== 'space') {
@@ -271,20 +257,20 @@ class Keyboard {
     if (btn) {
       btn.classList.add('btn_active');
       Keyboard.setSpecBtn(btn, e.repeat);
-      if (btn.dataset.value === 'Caps lock') {
+      if (btn.dataset.value === 'CapsLock') {
         caps = e.repeat ? caps : !caps;
         if (!e.repeat) btn.classList.toggle('btn_caps_active');
       }
 
       const inner = btn.querySelector('.btn__inner');
 
-      if (btn.dataset.value.match(/^.$/) && ctrl) {
+      if (btn.dataset.value.match(/./) && ctrl) {
         return;
       }
 
       this.setTextAreaValue(btn, inner);
 
-      if (btn.dataset.value.match(/(^.$|Enter|space|Del|inner|BackSlash)/)) e.preventDefault();
+      e.preventDefault();
     }
   }
 
@@ -309,44 +295,10 @@ class Keyboard {
 
     if (e.code.includes('Arrow')) {
       btn = document.querySelector(`[data-value="inner_${e.code.slice(5).toLowerCase()}"]`);
-    } else if (e.code === 'ShiftLeft') {
-      btn = document.querySelector('.btn_lshift');
-    } else if (e.code === 'ShiftRight') {
-      btn = document.querySelector('.btn_rshift');
-    } else if (e.code === 'Space') {
-      btn = document.querySelector('.btn_space');
-    } else if (e.code === 'AltLeft') {
-      btn = document.querySelector('.btn_lAlt');
     } else if (e.code === 'AltRight') {
-      btn = document.querySelector('.btn_rAlt');
-    } else if (e.code === 'ControlLeft') {
-      btn = document.querySelector('.btn_lctrl');
-    } else if (e.code === 'ControlRight') {
-      btn = document.querySelector('.btn_rctrl');
-    } else if (e.code === 'CapsLock') {
-      btn = document.querySelector('.btn_caps');
-    } else if (e.code === 'Delete') {
-      btn = document.querySelector('.btn_del');
-    } else if (e.key === 'Meta') {
-      btn = document.querySelector('.btn_win');
-    } else if (e.key === 'Tab') {
-      btn = document.querySelector('.btn_tab');
-    } else if (e.key === 'Backspace') {
-      btn = document.querySelector('.btn_backspace');
-    } else if (e.key === '"') {
-      btn = document.querySelector('[data-value="dquote"]');
-    } else if (e.code === 'IntlBackslash') {
-      btn = document.querySelector('[data-value="lBackSlash"]');
-    } else if (e.code === 'Backslash') {
-      btn = document.querySelector('[data-value="rBackSlash"]');
-    } else if (e.key.match(/^.{1}$/)) {
-      btn = document.querySelector(`[data-value="${e.key}"]`);
+      btn = document.querySelector('[data-value="AltRight"]');
     } else {
-      btn = document.querySelector(`[data-value="${e.key}"]`);
-    }
-
-    if (btn) {
-      btn = btn.closest('.btn');
+      btn = document.querySelector(`[data-value="${e.code}"]`);
     }
     return btn;
   }
@@ -354,13 +306,13 @@ class Keyboard {
   // Функция для изменения значений спец-клавиш.
   static setSpecBtn(btn, repeat = false) {
     if (!repeat && btn) {
-      if (btn.dataset.value === 'Shift') {
+      if (btn.dataset.value.includes('Shift')) {
         shift = btn.classList.contains('btn_active') ? !shift : false;
       }
-      if (btn.dataset.value === 'Alt') {
+      if (btn.dataset.value.includes('Alt')) {
         alt = btn.classList.contains('btn_active') ? !alt : false;
       }
-      if (btn.dataset.value === 'Ctrl') {
+      if (btn.dataset.value.includes('Control')) {
         ctrl = btn.classList.contains('btn_active') ? !ctrl : false;
       }
     }
