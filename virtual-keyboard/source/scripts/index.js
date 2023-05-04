@@ -284,7 +284,7 @@ class Keyboard {
 
       this.setTextAreaValue(btn, inner);
 
-      if (btn.dataset.value.match(/(^.$|Enter|space|Del|inner)/)) e.preventDefault();
+      if (btn.dataset.value.match(/(^.$|Enter|space|Del|inner|BackSlash)/)) e.preventDefault();
     }
   }
 
